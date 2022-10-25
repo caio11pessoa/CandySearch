@@ -38,10 +38,18 @@ class MasterViewController: UIViewController {
   
   var candies: [Candy] = []
   
+  let searchController = UISearchController(searchResultsController: nil)
+  
+
+  
+  var isFiltering: Bool {
+    return searchController.isActive &&  !isSearchBarEmpty
+  }
+  
   override func viewDidLoad() {
     super.viewDidLoad()
     candies = Candy.candies()
-    let searchController = UISearchController(searchResultsController: nil)
+
     
     // is a property on UISearchController that conforms to the new protocol, UISearchResultsUpdating.
     // With this protocol, UISearchResultsUpdating will informyour class of any text changes within the UISearchBar
@@ -66,6 +74,7 @@ class MasterViewController: UIViewController {
     var isSearchBarEmpty: Bool {
       return searchController.searchBar.text?.isEmpty ?? true
     }
+
   }
   
   override func viewWillAppear(_ animated: Bool) {
@@ -101,6 +110,9 @@ class MasterViewController: UIViewController {
 extension MasterViewController: UITableViewDataSource {
   func tableView(_ tableView: UITableView,
                  numberOfRowsInSection section: Int) -> Int {
+    if(isFiltering) {
+      return filteredCandies.count
+    }
     return candies.count
   }
   
@@ -108,7 +120,12 @@ extension MasterViewController: UITableViewDataSource {
                  cellForRowAt indexPath: IndexPath) -> UITableViewCell {
     let cell = tableView.dequeueReusableCell(withIdentifier: "Cell",
                                              for: indexPath)
-    let candy = candies[indexPath.row]
+    let candy: Candy
+    if isFiltering {
+      candy = filteredCandies[indexPath.row]
+    }else {
+      candy = candies[indexPath.row]
+    }
     cell.textLabel?.text = candy.name
     cell.detailTextLabel?.text = candy.category.rawValue
     return cell
