@@ -33,6 +33,9 @@ class MasterViewController: UIViewController {
   @IBOutlet var searchFooter: SearchFooter!
   @IBOutlet var searchFooterBottomConstraint: NSLayoutConstraint!
   
+  var filteredCandies: [Candy] = []
+ 
+  
   var candies: [Candy] = []
   
   override func viewDidLoad() {
@@ -58,6 +61,11 @@ class MasterViewController: UIViewController {
     
     // You ensure that the search bar doesn't remain on the screen if the user navigates to another view controller while the UISearchController is active.
     definesPresentationContext = true
+    
+    // returns true if the text typed in the search bar is empty, otherwise, it returns false.
+    var isSearchBarEmpty: Bool {
+      return searchController.searchBar.text?.isEmpty ?? true
+    }
   }
   
   override func viewWillAppear(_ animated: Bool) {
@@ -80,6 +88,14 @@ class MasterViewController: UIViewController {
     let candy = candies[indexPath.row]
     detailViewController.candy = candy
   }
+  
+  func filterContentForSearchText(_ searchText: String, category: Candy.Category? = nil){
+    filteredCandies = candies.filter { (candy: Candy) -> Bool in
+      return candy.name.lowercased().contains(searchText.lowercased())
+    }
+    tableView.reloadData()
+  }
+  
 }
 
 extension MasterViewController: UITableViewDataSource {
@@ -101,6 +117,7 @@ extension MasterViewController: UITableViewDataSource {
 
 extension MasterViewController: UISearchResultsUpdating {
   func updateSearchResults(for searchController: UISearchController) {
-    //todo
+    let searchBar = searchController.searchBar
+    filterContentForSearchText(searchBar.text!)
   }
 }
