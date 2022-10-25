@@ -37,6 +37,27 @@ class MasterViewController: UIViewController {
   
   override func viewDidLoad() {
     super.viewDidLoad()
+    candies = Candy.candies()
+    let searchController = UISearchController(searchResultsController: nil)
+    
+    // is a property on UISearchController that conforms to the new protocol, UISearchResultsUpdating.
+    // With this protocol, UISearchResultsUpdating will informyour class of any text changes within the UISearchBar
+    searchController.searchResultsUpdater = self
+    
+    // By default, UISearchController obscures the view controller containing the information you're searching.
+    // This is useful if you're using another view controller for your searchResultsController.
+    // In this instance, you've set the current view to show the results, so you don't want to obscure your view.
+    searchController.obscuresBackgroundDuringPresentation = false
+    
+    // set the placeholder
+    searchController.searchBar.placeholder = "Search Candies"
+    
+    // you add the searchBar to the navigationItem.
+    // This is necessary because interface builder is not yet compatible with UISearchController.
+    navigationItem.searchController = searchController
+    
+    // You ensure that the search bar doesn't remain on the screen if the user navigates to another view controller while the UISearchController is active.
+    definesPresentationContext = true
   }
   
   override func viewWillAppear(_ animated: Bool) {
@@ -75,5 +96,11 @@ extension MasterViewController: UITableViewDataSource {
     cell.textLabel?.text = candy.name
     cell.detailTextLabel?.text = candy.category.rawValue
     return cell
+  }
+}
+
+extension MasterViewController: UISearchResultsUpdating {
+  func updateSearchResults(for searchController: UISearchController) {
+    //todo
   }
 }
