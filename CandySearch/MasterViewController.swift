@@ -47,7 +47,8 @@ class MasterViewController: UIViewController {
   }
   
   var isFiltering: Bool {
-    return searchController.isActive &&  !isSearchBarEmpty
+    let searchBarScopeIsFiltering = searchController.searchBar.selectedScopeButtonIndex != 0
+    return searchController.isActive &&  (!isSearchBarEmpty || searchBarScopeIsFiltering)
   }
   
   override func viewDidLoad() {
@@ -74,6 +75,9 @@ class MasterViewController: UIViewController {
     // You ensure that the search bar doesn't remain on the screen if the user navigates to another view controller while the UISearchController is active.
     definesPresentationContext = true
     
+    searchController.searchBar.scopeButtonTitles = Candy.Category.allCases.map { $0.rawValue }
+    searchController.searchBar.delegate = self
+    
 
 
   }
@@ -95,7 +99,6 @@ class MasterViewController: UIViewController {
         return
     }
     
-//    let candy = candies[indexPath.row]
     let candy: Candy
     if isFiltering {
       candy = filteredCandies[indexPath.row]
@@ -107,7 +110,13 @@ class MasterViewController: UIViewController {
   
   func filterContentForSearchText(_ searchText: String, category: Candy.Category? = nil){
     filteredCandies = candies.filter { (candy: Candy) -> Bool in
-      return candy.name.lowercased().contains(searchText.lowercased())
+      let doesCategoryMatch = category == .all || candy.category == category
+      
+      if isSearchBarEmpty {
+        return doesCategoryMatch
+      } else {
+        return doesCategoryMatch && candy.name.lowercased().contains(searchText.lowercased())
+      }
     }
     tableView.reloadData()
   }
@@ -142,6 +151,14 @@ extension MasterViewController: UITableViewDataSource {
 extension MasterViewController: UISearchResultsUpdating {
   func updateSearchResults(for searchController: UISearchController) {
     let searchBar = searchController.searchBar
-    filterContentForSearchText(searchBar.text!)
+    let category = Candy.Category(rawValue: searchBar.scopeButtonTitles![searchBar.selectedScopeButtonIndex])
+    filterContentForSearchText(searchBar.text!, category: category)
+  }
+}
+
+extension MasterViewController: UISearchBarDelegate {
+  func searchBar(_ searchBar: UISearchBar, selectedScopeButtonIndexDidChange selectedScope: Int) {
+    let category = Candy.Category(rawValue: searchBar.scopeButtonTitles![selectedScope])
+    filterContentForSearchText(searchBar.text!, category: category)
   }
 }
