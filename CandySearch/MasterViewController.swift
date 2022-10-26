@@ -34,13 +34,13 @@ class MasterViewController: UIViewController {
   @IBOutlet var searchFooterBottomConstraint: NSLayoutConstraint!
   
   var filteredCandies: [Candy] = []
- 
+  
   
   var candies: [Candy] = []
   
   let searchController = UISearchController(searchResultsController: nil)
   
-
+  
   // returns true if the text typed in the search bar is empty, otherwise, it returns false.
   var isSearchBarEmpty: Bool {
     return searchController.searchBar.text?.isEmpty ?? true
@@ -54,7 +54,7 @@ class MasterViewController: UIViewController {
   override func viewDidLoad() {
     super.viewDidLoad()
     candies = Candy.candies()
-
+    
     
     // is a property on UISearchController that conforms to the new protocol, UISearchResultsUpdating.
     // With this protocol, UISearchResultsUpdating will informyour class of any text changes within the UISearchBar
@@ -77,9 +77,33 @@ class MasterViewController: UIViewController {
     
     searchController.searchBar.scopeButtonTitles = Candy.Category.allCases.map { $0.rawValue }
     searchController.searchBar.delegate = self
+    /*
+     let notificationCenter = NotificationCenter.default
+     notificationCenter.addObserver(
+     forName: UIResponder.keyboardWillChangeFrameNotification,
+     object: nil, queue: .main) { (notification) in
+     self.handleKeyboard(notification: notification)
+     }
+     notificationCenter.addObserver(
+     forName: UIResponder.keyboardWillHideNotification,
+     object: nil, queue: .main) { (notification) in
+     self.handleKeyboard(notification: notification)
+     }
+     
+     */
     
-
-
+    let notificationCenter = NotificationCenter.default
+    notificationCenter.addObserver(
+      forName: UIResponder.keyboardWillChangeFrameNotification,
+      object: nil, queue: .main) { (notification) in
+        self.handleKeyboard(notification: notification)
+      }
+    
+    notificationCenter.addObserver(forName: UIResponder.keyboardWillHideNotification, object: nil, queue: .main) { (notification) in
+      self.handleKeyboard(notification: notification)
+      
+    }
+    
   }
   
   override func viewWillAppear(_ animated: Bool) {
@@ -95,8 +119,8 @@ class MasterViewController: UIViewController {
       segue.identifier == "ShowDetailSegue",
       let indexPath = tableView.indexPathForSelectedRow,
       let detailViewController = segue.destination as? DetailViewController
-      else {
-        return
+    else {
+      return
     }
     
     let candy: Candy
@@ -121,14 +145,40 @@ class MasterViewController: UIViewController {
     tableView.reloadData()
   }
   
+  func handleKeyboard(notification: Notification) {
+    // You first check if the notification is has anything to do with hiding the keyboard. If not, you move the search footer down and bail out.
+    guard notification.name == UIResponder.keyboardWillChangeFrameNotification else {
+      searchFooterBottomConstraint.constant = 0
+      view.layoutIfNeeded()
+      return
+    }
+    guard
+      let info = notification.userInfo,
+      let keyBoardFrame = info[UIResponder.keyboardFrameEndUserInfoKey] as? NSValue
+    else {
+      return
+    }
+    
+    // If the notification identifies the ending frame rectangle of the keyboard, you move the search footer just above the keyboard itself.
+    let keyboardHeight = keyBoardFrame.cgRectValue.size.height
+    UIView.animate(withDuration: 0.1, animations: { () -> Void in
+      self.searchFooterBottomConstraint.constant = keyboardHeight
+      self.view.layoutIfNeeded()
+
+    })
+  }
+  
 }
 
 extension MasterViewController: UITableViewDataSource {
   func tableView(_ tableView: UITableView,
                  numberOfRowsInSection section: Int) -> Int {
     if(isFiltering) {
+      searchFooter.setIsFilteringToShow(filteredItemCount: filteredCandies.count, of: candies.count)
       return filteredCandies.count
     }
+    
+    searchFooter.setNotFiltering()
     return candies.count
   }
   
