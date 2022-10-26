@@ -41,6 +41,10 @@ class MasterViewController: UIViewController {
   let searchController = UISearchController(searchResultsController: nil)
   
 
+  // returns true if the text typed in the search bar is empty, otherwise, it returns false.
+  var isSearchBarEmpty: Bool {
+    return searchController.searchBar.text?.isEmpty ?? true
+  }
   
   var isFiltering: Bool {
     return searchController.isActive &&  !isSearchBarEmpty
@@ -70,10 +74,7 @@ class MasterViewController: UIViewController {
     // You ensure that the search bar doesn't remain on the screen if the user navigates to another view controller while the UISearchController is active.
     definesPresentationContext = true
     
-    // returns true if the text typed in the search bar is empty, otherwise, it returns false.
-    var isSearchBarEmpty: Bool {
-      return searchController.searchBar.text?.isEmpty ?? true
-    }
+
 
   }
   
@@ -94,7 +95,13 @@ class MasterViewController: UIViewController {
         return
     }
     
-    let candy = candies[indexPath.row]
+//    let candy = candies[indexPath.row]
+    let candy: Candy
+    if isFiltering {
+      candy = filteredCandies[indexPath.row]
+    } else {
+      candy = candies[indexPath.row]
+    }
     detailViewController.candy = candy
   }
   
